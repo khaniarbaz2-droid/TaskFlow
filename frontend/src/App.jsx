@@ -1,32 +1,34 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import CreateTask from "./pages/CreateTask";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AllTasks from "./pages/AllTasks";
+import CreateTask from "./pages/CreateTask";
+import MyTasks from "./pages/MyTasks";
+import TaskDetails from "./pages/TaskDetails";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* Login */}
+        {/* Authentication */}
         <Route path="/login" element={<Login />} />
-
-        {/* Registration */}
         <Route path="/register" element={<Register />} />
 
         {/* Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
 
-        {/* All Tasks */}
+        {/* Tasks */}
         <Route path="/tasks" element={<AllTasks />} />
-
-        {/* Create Task */}
         <Route path="/tasks/create" element={<CreateTask />} />
+        <Route path="/my-tasks" element={<MyTasks />} />
 
-        {/* Default page */}
+        {/* Task Details */}
+        <Route path="/tasks/:id" element={<TaskDetails />} />
+
+        {/* Default */}
         <Route
           path="/"
           element={<Navigate to="/login" replace />}

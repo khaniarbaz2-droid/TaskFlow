@@ -1,9 +1,11 @@
+import { Link } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import "./AllTasks.css";
 
 function AllTasks() {
   const tasks = [
     {
+      id: 1,
       title: "Design Login Page",
       priority: "High",
       status: "In Progress",
@@ -12,6 +14,7 @@ function AllTasks() {
       dueDate: "Sep 5, 2026",
     },
     {
+      id: 2,
       title: "Setup Database",
       priority: "Medium",
       status: "Completed",
@@ -20,6 +23,7 @@ function AllTasks() {
       dueDate: "Sep 3, 2026",
     },
     {
+      id: 3,
       title: "API Integration",
       priority: "High",
       status: "Pending",
@@ -33,15 +37,22 @@ function AllTasks() {
     <DashboardLayout>
 
       <div className="tasks-header">
+
         <div>
           <h1>All Tasks</h1>
           <p>Manage and monitor all project tasks.</p>
         </div>
 
-        <button className="create-task-btn">
+        <Link
+          to="/tasks/create"
+          className="create-task-btn"
+        >
           + Create Task
-        </button>
+        </Link>
+
       </div>
+
+      {/* SEARCH + FILTERS */}
 
       <div className="task-controls">
 
@@ -70,6 +81,8 @@ function AllTasks() {
 
       </div>
 
+      {/* TASK TABLE */}
+
       <div className="tasks-table">
 
         <div className="tasks-row tasks-heading">
@@ -81,14 +94,22 @@ function AllTasks() {
           <span>Due Date</span>
         </div>
 
-        {tasks.map((task, index) => (
-          <div className="tasks-row" key={index}>
+        {tasks.map((task) => (
+          <div
+            className="tasks-row"
+            key={task.id}
+          >
 
-            <span className="task-title">
+            <Link
+              to={`/tasks/${task.id}`}
+              className="task-title task-link"
+            >
               {task.title}
-            </span>
+            </Link>
 
-            <span className={`priority ${task.priority.toLowerCase()}`}>
+            <span
+              className={`priority ${task.priority.toLowerCase()}`}
+            >
               {task.priority}
             </span>
 

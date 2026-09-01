@@ -123,3 +123,42 @@
     flex-direction: column;
   }
 }
+
+.task-link {
+  color: #1f2937;
+  text-decoration: none;
+}
+
+.task-link:hover {
+  color: #2563eb;
+}
+
+.task-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.task-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.create-task-btn {
+  text-decoration: none;
+}
+
+.task-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.task-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.create-task-btn {
+  text-decoration: none;
+}

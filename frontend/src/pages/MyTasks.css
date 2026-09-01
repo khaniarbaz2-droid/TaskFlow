@@ -1,0 +1,154 @@
+.my-tasks-header {
+  margin-bottom: 25px;
+}
+
+.my-tasks-header h1 {
+  margin-bottom: 5px;
+}
+
+.my-tasks-header p {
+  color: #6b7280;
+}
+
+/* FILTERS */
+
+.task-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filter-btn {
+  padding: 10px 18px;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 7px;
+  cursor: pointer;
+  color: #374151;
+  font-size: 14px;
+}
+
+.filter-btn:hover {
+  border-color: #2563eb;
+}
+
+.filter-btn.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+/* TABLE */
+
+.my-tasks-table {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.my-task-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.2fr 1.5fr 1.2fr;
+  align-items: center;
+  gap: 15px;
+
+  padding: 18px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.my-task-row:last-child {
+  border-bottom: none;
+}
+
+.my-task-heading {
+  background: #f9fafb;
+  font-weight: bold;
+  color: #6b7280;
+}
+
+.my-task-title {
+  font-weight: 600;
+}
+
+/* CLICKABLE TASK */
+
+.task-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.task-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* PRIORITY */
+
+.priority {
+  font-weight: bold;
+}
+
+.priority.high {
+  color: #dc2626;
+}
+
+.priority.medium {
+  color: #d97706;
+}
+
+.priority.low {
+  color: #16a34a;
+}
+
+.priority.critical {
+  color: #991b1b;
+}
+
+/* PROGRESS */
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-bar {
+  width: 90px;
+  height: 7px;
+  background: #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 10px;
+}
+
+/* EMPTY STATE */
+
+.no-tasks {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 850px) {
+
+  .my-tasks-table {
+    overflow-x: auto;
+  }
+
+  .my-task-row {
+    min-width: 750px;
+  }
+
+  .task-filters {
+    overflow-x: auto;
+  }
+}
