@@ -1,0 +1,144 @@
+.user-management-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.user-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.user-management-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #111827;
+}
+
+.user-management-header p {
+  margin-top: 8px;
+  color: #6b7280;
+}
+
+.user-count {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 10px 15px;
+  border-radius: 7px;
+  font-weight: 600;
+}
+
+.users-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.users-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.users-row {
+  min-width: 850px;
+  display: grid;
+  grid-template-columns: 1.5fr 2fr 1.3fr 1fr 1.2fr;
+  align-items: center;
+  gap: 15px;
+  padding: 16px 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.users-heading {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 13px;
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.user-email {
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.role-select {
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+.user-status {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.user-status.active {
+  color: #16a34a;
+}
+
+.user-status.inactive {
+  color: #dc2626;
+}
+
+.status-btn {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.status-btn.deactivate {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.status-btn.deactivate:hover {
+  background: #fecaca;
+}
+
+.status-btn.activate {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status-btn.activate:hover {
+  background: #bbf7d0;
+}
+
+@media (max-width: 900px) {
+  .users-table {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .user-management-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+}
