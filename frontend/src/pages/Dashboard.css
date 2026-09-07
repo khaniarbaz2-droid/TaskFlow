@@ -71,3 +71,33 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+.role-switcher {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.role-switcher label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.role-switcher select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: white;
+  cursor: pointer;
+}
+
+.current-role {
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 8px 12px;
+  background: #eff6ff;
+  color: #374151;
+  border-radius: 6px;
+  font-size: 14px;
+}

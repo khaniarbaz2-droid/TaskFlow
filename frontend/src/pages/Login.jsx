@@ -50,9 +50,9 @@ function Login() {
 
         </form>
 
-        <p className="forgot-password">
-          Forgot password?
-        </p>
+       <p className="forgot-password">
+        <Link to="/forgot-password">Forgot password?</Link>
+       </p>
 
         <p className="register-text">
           Don't have an account?{" "}

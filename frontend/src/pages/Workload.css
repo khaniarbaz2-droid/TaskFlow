@@ -1,0 +1,145 @@
+.workload-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.workload-header {
+  margin-bottom: 25px;
+}
+
+.workload-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #111827;
+}
+
+.workload-header p {
+  margin-top: 8px;
+  color: #6b7280;
+}
+
+.workload-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.workload-stat {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.workload-stat span {
+  display: block;
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.workload-stat strong {
+  font-size: 26px;
+  color: #111827;
+}
+
+.team-table-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.team-table-card h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #111827;
+}
+
+.team-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.team-row {
+  min-width: 850px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.2fr 1fr 1fr;
+  align-items: center;
+  gap: 15px;
+  padding: 16px 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.team-heading {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 13px;
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.member-info strong {
+  color: #111827;
+}
+
+.member-info p {
+  margin: 3px 0 0;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.pending-count {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.progress-count {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.completed-count {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.overdue-count {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .workload-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .team-table {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 550px) {
+  .workload-summary {
+    grid-template-columns: 1fr;
+  }
+}

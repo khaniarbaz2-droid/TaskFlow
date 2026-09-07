@@ -1,20 +1,41 @@
+import { useAuth } from "../context/AuthContext";
+
 function Navbar() {
+  const { user } = useAuth();
+
+  const userName = user?.name || "User";
+  const userRole = user?.role || "Guest";
+
+  const initials = userName
+    .split(" ")
+    .map((name) => name.charAt(0))
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <header className="navbar">
-      <div>
-        <h3>Dashboard</h3>
+      <div className="navbar-title">
+        <h2>Dashboard</h2>
       </div>
 
       <div className="navbar-right">
-        <span className="notification-icon">🔔</span>
+        <button
+          className="notification-icon"
+          onClick={() => {
+            window.location.href = "/notifications";
+          }}
+        >
+          🔔
+        </button>
 
-        <div className="user-info">
-          <div className="user-avatar">AK</div>
+        <div className="navbar-avatar">
+          {initials}
+        </div>
 
-          <div>
-            <strong>Arbaz</strong>
-            <p>Manager</p>
-          </div>
+        <div className="navbar-user">
+          <strong>{userName}</strong>
+          <span>{userRole}</span>
         </div>
       </div>
     </header>

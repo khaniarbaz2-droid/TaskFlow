@@ -241,3 +241,72 @@
     grid-template-columns: 1fr;
   }
 }
+.task-update-card {
+  margin-top: 20px;
+}
+
+.update-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-top: 20px;
+}
+
+.update-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.update-field label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.update-field select {
+  padding: 11px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: white;
+}
+
+.update-field input[type="range"] {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.progress-range-values {
+  display: flex;
+  justify-content: space-between;
+  color: #9ca3af;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.update-task-btn {
+  margin-top: 25px;
+  padding: 11px 20px;
+  border: none;
+  border-radius: 7px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.update-task-btn:hover {
+  background: #1d4ed8;
+}
+
+.comments-list,
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+@media (max-width: 700px) {
+  .update-form {
+    grid-template-columns: 1fr;
+  }
+}
