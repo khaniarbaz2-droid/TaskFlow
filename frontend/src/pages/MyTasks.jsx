@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useAuth } from "../context/AuthContext";
@@ -7,8 +7,18 @@ import "./MyTasks.css";
 function MyTasks() {
   const { user } = useAuth();
 
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeFilter, setActiveFilter] =
+    useState("All");
+
+  const [searchTerm, setSearchTerm] =
+    useState("");
+
   const [tasks, setTasks] = useState([]);
+
+
+  /* =========================================
+     LOAD TASKS
+     ========================================= */
 
   const loadTasks = () => {
     const savedTasks = JSON.parse(
@@ -45,7 +55,11 @@ function MyTasks() {
       },
     ];
 
-    // Use saved task when the same ID exists
+
+    /* =========================================
+       MERGE DEFAULT + SAVED TASKS
+       ========================================= */
+
     const taskMap = new Map();
 
     defaultTasks.forEach((task) => {
@@ -58,6 +72,11 @@ function MyTasks() {
 
     setTasks(Array.from(taskMap.values()));
   };
+
+
+  /* =========================================
+     INITIAL LOAD
+     ========================================= */
 
   useEffect(() => {
     loadTasks();
@@ -89,110 +108,504 @@ function MyTasks() {
     };
   }, []);
 
-  const myTasks = tasks.filter(
-    (task) => task.assignedTo === user?.name
-  );
 
-  const filteredTasks =
-    activeFilter === "All"
-      ? myTasks
-      : myTasks.filter(
-          (task) => task.status === activeFilter
-        );
+  /* =========================================
+     MY TASKS
+     ========================================= */
+
+  const myTasks = useMemo(() => {
+    return tasks.filter(
+      (task) =>
+        task.assignedTo === user?.name
+    );
+  }, [tasks, user?.name]);
+
+
+  /* =========================================
+     FILTER + SEARCH
+     ========================================= */
+
+  const filteredTasks = useMemo(() => {
+    return myTasks.filter((task) => {
+
+      const matchesStatus =
+        activeFilter === "All" ||
+        task.status === activeFilter;
+
+      const matchesSearch =
+        task.title
+          ?.toLowerCase()
+          .includes(
+            searchTerm.toLowerCase()
+          );
+
+      return (
+        matchesStatus &&
+        matchesSearch
+      );
+    });
+  }, [
+    myTasks,
+    activeFilter,
+    searchTerm,
+  ]);
+
+
+  /* =========================================
+     COUNTS
+     ========================================= */
+
+  const pendingCount = myTasks.filter(
+    (task) =>
+      task.status === "Pending"
+  ).length;
+
+  const progressCount = myTasks.filter(
+    (task) =>
+      task.status === "In Progress"
+  ).length;
+
+  const completedCount = myTasks.filter(
+    (task) =>
+      task.status === "Completed"
+  ).length;
+
+
+  /* =========================================
+     OVERDUE
+     ========================================= */
+
+  const isOverdue = (task) => {
+    if (
+      !task.dueDate ||
+      task.status === "Completed"
+    ) {
+      return false;
+    }
+
+    const dueDate = new Date(
+      task.dueDate
+    );
+
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+    return dueDate < today;
+  };
+
+
+  /* =========================================
+     PRIORITY CLASS
+     ========================================= */
+
+  const getPriorityClass = (priority) => {
+    return (
+      priority
+        ?.toLowerCase()
+        .replace(" ", "-") || ""
+    );
+  };
+
+
+  /* =========================================
+     STATUS CLASS
+     ========================================= */
+
+  const getStatusClass = (status) => {
+    return (
+      status
+        ?.toLowerCase()
+        .replace(" ", "-") || ""
+    );
+  };
+
 
   return (
     <DashboardLayout>
-      <div className="my-tasks-header">
-        <div>
-          <h1>My Tasks</h1>
 
-          <p>
-            Tasks assigned to {user?.name || "you"}.
-          </p>
+      <div className="my-tasks-page">
+
+        {/* =================================
+            HEADER
+            ================================= */}
+
+        <div className="my-tasks-header">
+
+          <div>
+
+            <p className="my-tasks-label">
+              Task Management
+            </p>
+
+            <h1>
+              My Tasks
+            </h1>
+
+            <p>
+              Tasks assigned to{" "}
+              <strong>
+                {user?.name || "you"}
+              </strong>
+              .
+            </p>
+
+          </div>
+
+          <div className="task-count-box">
+
+            <strong>
+              {myTasks.length}
+            </strong>
+
+            <span>
+              Total Tasks
+            </span>
+
+          </div>
+
         </div>
-      </div>
 
-      <div className="task-filters">
-        {[
-          "All",
-          "Pending",
-          "In Progress",
-          "Completed",
-        ].map((filter) => (
-          <button
-            key={filter}
-            className={
-              activeFilter === filter
-                ? "filter-btn active"
-                : "filter-btn"
-            }
-            onClick={() =>
-              setActiveFilter(filter)
-            }
-          >
-            {filter}
-          </button>
-        ))}
-      </div>
 
-      <div className="my-tasks-table">
-        <div className="my-task-row my-task-heading">
-          <span>Task</span>
-          <span>Priority</span>
-          <span>Status</span>
-          <span>Progress</span>
-          <span>Due Date</span>
+        {/* =================================
+            SUMMARY
+            ================================= */}
+
+        <div className="my-task-summary">
+
+          <div className="summary-card">
+
+            <div className="summary-icon blue">
+              📋
+            </div>
+
+            <div>
+              <span>Total Tasks</span>
+              <strong>
+                {myTasks.length}
+              </strong>
+            </div>
+
+          </div>
+
+
+          <div className="summary-card">
+
+            <div className="summary-icon orange">
+              ◷
+            </div>
+
+            <div>
+              <span>Pending</span>
+              <strong>
+                {pendingCount}
+              </strong>
+            </div>
+
+          </div>
+
+
+          <div className="summary-card">
+
+            <div className="summary-icon purple">
+              ↻
+            </div>
+
+            <div>
+              <span>In Progress</span>
+              <strong>
+                {progressCount}
+              </strong>
+            </div>
+
+          </div>
+
+
+          <div className="summary-card">
+
+            <div className="summary-icon green">
+              ✓
+            </div>
+
+            <div>
+              <span>Completed</span>
+              <strong>
+                {completedCount}
+              </strong>
+            </div>
+
+          </div>
+
         </div>
 
-        {filteredTasks.length > 0 ? (
-          filteredTasks.map((task) => (
-            <div
-              className="my-task-row"
-              key={task.id}
-            >
+
+        {/* =================================
+            TOOLBAR
+            ================================= */}
+
+        <div className="my-tasks-toolbar">
+
+          <div className="task-search">
+
+            <span>
+              🔍
+            </span>
+
+            <input
+              type="text"
+              placeholder="Search your tasks..."
+              value={searchTerm}
+              onChange={(e) =>
+                setSearchTerm(
+                  e.target.value
+                )
+              }
+            />
+
+          </div>
+
+
+          <div className="task-filters">
+
+            {[
+              "All",
+              "Pending",
+              "In Progress",
+              "Completed",
+            ].map((filter) => (
+
+              <button
+                key={filter}
+                className={
+                  activeFilter === filter
+                    ? "filter-btn active"
+                    : "filter-btn"
+                }
+                onClick={() =>
+                  setActiveFilter(filter)
+                }
+              >
+                {filter}
+
+                {filter === "All" && (
+                  <span>
+                    {myTasks.length}
+                  </span>
+                )}
+
+                {filter === "Pending" && (
+                  <span>
+                    {pendingCount}
+                  </span>
+                )}
+
+                {filter === "In Progress" && (
+                  <span>
+                    {progressCount}
+                  </span>
+                )}
+
+                {filter === "Completed" && (
+                  <span>
+                    {completedCount}
+                  </span>
+                )}
+
+              </button>
+
+            ))}
+
+          </div>
+
+        </div>
+
+
+        {/* =================================
+            TASK TABLE
+            ================================= */}
+
+        <div className="my-tasks-table">
+
+          <div className="my-task-row my-task-heading">
+
+            <span>
+              Task
+            </span>
+
+            <span>
+              Priority
+            </span>
+
+            <span>
+              Status
+            </span>
+
+            <span>
+              Progress
+            </span>
+
+            <span>
+              Due Date
+            </span>
+
+          </div>
+
+
+          {filteredTasks.length > 0 ? (
+
+            filteredTasks.map((task) => (
+
               <Link
                 to={`/tasks/${task.id}`}
-                className="my-task-title task-link"
+                className="my-task-row my-task-data-row"
+                key={task.id}
               >
-                {task.title}
-              </Link>
 
-              <span
-                className={`priority ${
-                  task.priority?.toLowerCase() || ""
-                }`}
-              >
-                {task.priority}
-              </span>
+                {/* TASK */}
 
-              <span>{task.status}</span>
+                <div className="task-name-cell">
 
-              <div className="progress-container">
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill"
-                    style={{
-                      width: `${task.progress || 0}%`,
-                    }}
-                  ></div>
+                  <div className="task-list-icon">
+                    📋
+                  </div>
+
+                  <div>
+
+                    <strong>
+                      {task.title}
+                    </strong>
+
+                    {isOverdue(task) && (
+                      <small className="overdue-label">
+                        Overdue
+                      </small>
+                    )}
+
+                  </div>
+
                 </div>
 
-                <span>
-                  {task.progress || 0}%
+
+                {/* PRIORITY */}
+
+                <span
+                  className={`priority-badge ${getPriorityClass(
+                    task.priority
+                  )}`}
+                >
+                  {task.priority}
                 </span>
+
+
+                {/* STATUS */}
+
+                <span
+                  className={`status-badge ${getStatusClass(
+                    task.status
+                  )}`}
+                >
+                  {task.status}
+                </span>
+
+
+                {/* PROGRESS */}
+
+                <div className="progress-cell">
+
+                  <div className="progress-top">
+
+                    <span>
+                      Progress
+                    </span>
+
+                    <strong>
+                      {task.progress || 0}%
+                    </strong>
+
+                  </div>
+
+                  <div className="progress-container">
+
+                    <div className="progress-bar">
+
+                      <div
+                        className="progress-fill"
+                        style={{
+                          width: `${
+                            task.progress || 0
+                          }%`,
+                        }}
+                      ></div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+
+                {/* DUE DATE */}
+
+                <div
+                  className={
+                    isOverdue(task)
+                      ? "due-date overdue"
+                      : "due-date"
+                  }
+                >
+
+                  <span>
+                    📅
+                  </span>
+
+                  <span>
+                    {task.dueDate ||
+                      "Not set"}
+                  </span>
+
+                </div>
+
+              </Link>
+
+            ))
+
+          ) : (
+
+            <div className="no-tasks">
+
+              <div className="no-tasks-icon">
+                📋
               </div>
 
-              <span>
-                {task.dueDate || "Not set"}
-              </span>
+              <h2>
+                No tasks found
+              </h2>
+
+              <p>
+                {searchTerm
+                  ? "Try a different search term."
+                  : "You don't have any tasks matching this filter."}
+              </p>
+
+              {searchTerm && (
+                <button
+                  onClick={() =>
+                    setSearchTerm("")
+                  }
+                  className="clear-search-btn"
+                >
+                  Clear Search
+                </button>
+              )}
+
             </div>
-          ))
-        ) : (
-          <div className="no-tasks">
-            No tasks assigned to you.
-          </div>
-        )}
+
+          )}
+
+        </div>
+
       </div>
+
     </DashboardLayout>
   );
 }
