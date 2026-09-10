@@ -1,15 +1,14 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
-import StatCard from "../components/StatCard";
 import { useAuth } from "../context/AuthContext";
 import "./Dashboard.css";
 
 function Dashboard() {
-  const { user, loginAs } = useAuth();
+  const { user } = useAuth();
 
-  const role = user?.role;
+  const role = user?.role || "Team Member";
 
-  // Read tasks from localStorage
   const [tasks] = useState(() => {
     const savedTasks = JSON.parse(
       localStorage.getItem("taskflow_tasks") || "[]"
@@ -45,25 +44,56 @@ function Dashboard() {
       },
     ];
 
-    return [...defaultTasks, ...savedTasks];
+    const taskMap = new Map();
+
+    defaultTasks.forEach((task) => {
+      taskMap.set(String(task.id), task);
+    });
+
+    savedTasks.forEach((task) => {
+      taskMap.set(String(task.id), task);
+    });
+
+    return Array.from(taskMap.values());
   });
 
-  // Calculate task statistics
+  /* =========================
+     TASK COUNTS
+     ========================= */
+
+  const totalTasks = tasks.length;
+
+  const completedTasks = tasks.filter(
+    (task) => task.status === "Completed"
+  ).length;
+
+  const inProgressTasks = tasks.filter(
+    (task) => task.status === "In Progress"
+  ).length;
+
+  const pendingTasks = tasks.filter(
+    (task) => task.status === "Pending"
+  ).length;
+
   const myTasks = tasks.filter(
     (task) => task.assignedTo === user?.name
   );
 
-  const pendingTasks = myTasks.filter(
-    (task) => task.status === "Pending"
-  );
-
-  const inProgressTasks = myTasks.filter(
-    (task) => task.status === "In Progress"
-  );
-
-  const completedTasks = myTasks.filter(
+  const myCompletedTasks = myTasks.filter(
     (task) => task.status === "Completed"
-  );
+  ).length;
+
+  const myInProgressTasks = myTasks.filter(
+    (task) => task.status === "In Progress"
+  ).length;
+
+  const myPendingTasks = myTasks.filter(
+    (task) => task.status === "Pending"
+  ).length;
+
+  /* =========================
+     OVERDUE
+     ========================= */
 
   const overdueTasks = tasks.filter((task) => {
     if (!task.dueDate || task.status === "Completed") {
@@ -76,204 +106,631 @@ function Dashboard() {
     return dueDate < today;
   });
 
-  const teamTasks = tasks.filter(
-    (task) => task.assignedBy === user?.name
-  );
+  /* =========================
+     COMPLETION %
+     ========================= */
 
-  // Dashboard data based on role
-  let currentDashboard;
+  const completionPercentage =
+    totalTasks > 0
+      ? Math.round(
+          (completedTasks / totalTasks) * 100
+        )
+      : 0;
+
+  /* =========================
+     ROLE DATA
+     ========================= */
+
+  let stats;
 
   if (role === "Admin") {
-    currentDashboard = {
-      subtitle:
-        "Here's an overview of your organization.",
-
-      stats: [
-        {
-          title: "Total Users",
-          value: "12",
-        },
-        {
-          title: "Total Tasks",
-          value: tasks.length,
-        },
-        {
-          title: "Completed",
-          value: tasks.filter(
-            (task) => task.status === "Completed"
-          ).length,
-        },
-        {
-          title: "In Progress",
-          value: tasks.filter(
-            (task) => task.status === "In Progress"
-          ).length,
-        },
-        {
-          title: "Overdue",
-          value: overdueTasks.length,
-        },
-      ],
-    };
+    stats = [
+      {
+        title: "Total Users",
+        value: "12",
+        icon: "👥",
+        type: "blue",
+      },
+      {
+        title: "Total Tasks",
+        value: totalTasks,
+        icon: "📋",
+        type: "purple",
+      },
+      {
+        title: "Completed",
+        value: completedTasks,
+        icon: "✓",
+        type: "green",
+      },
+      {
+        title: "In Progress",
+        value: inProgressTasks,
+        icon: "↻",
+        type: "orange",
+      },
+    ];
   } else if (role === "Manager") {
-    currentDashboard = {
-      subtitle:
-        "Here's an overview of your team's work.",
-
-      stats: [
-        {
-          title: "My Tasks",
-          value: myTasks.length,
-        },
-        {
-          title: "Team Tasks",
-          value: teamTasks.length,
-        },
-        {
-          title: "In Progress",
-          value: tasks.filter(
-            (task) => task.status === "In Progress"
-          ).length,
-        },
-        {
-          title: "Completed",
-          value: tasks.filter(
-            (task) => task.status === "Completed"
-          ).length,
-        },
-        {
-          title: "Overdue",
-          value: overdueTasks.length,
-        },
-      ],
-    };
+    stats = [
+      {
+        title: "My Tasks",
+        value: myTasks.length,
+        icon: "📋",
+        type: "blue",
+      },
+      {
+        title: "Team Tasks",
+        value: totalTasks,
+        icon: "👥",
+        type: "purple",
+      },
+      {
+        title: "Completed",
+        value: completedTasks,
+        icon: "✓",
+        type: "green",
+      },
+      {
+        title: "Overdue",
+        value: overdueTasks.length,
+        icon: "⚠",
+        type: "red",
+      },
+    ];
   } else {
-    currentDashboard = {
-      subtitle:
-        "Here's an overview of your assigned tasks.",
-
-      stats: [
-        {
-          title: "My Tasks",
-          value: myTasks.length,
-        },
-        {
-          title: "Pending",
-          value: pendingTasks.length,
-        },
-        {
-          title: "In Progress",
-          value: inProgressTasks.length,
-        },
-        {
-          title: "Completed",
-          value: completedTasks.length,
-        },
-        {
-          title: "Overdue",
-          value: overdueTasks.filter(
-            (task) => task.assignedTo === user?.name
-          ).length,
-        },
-      ],
-    };
+    stats = [
+      {
+        title: "My Tasks",
+        value: myTasks.length,
+        icon: "📋",
+        type: "blue",
+      },
+      {
+        title: "Pending",
+        value: myPendingTasks,
+        icon: "◷",
+        type: "orange",
+      },
+      {
+        title: "In Progress",
+        value: myInProgressTasks,
+        icon: "↻",
+        type: "purple",
+      },
+      {
+        title: "Completed",
+        value: myCompletedTasks,
+        icon: "✓",
+        type: "green",
+      },
+    ];
   }
 
-  // Show recent tasks
-  const recentTasks = tasks.slice(-5).reverse();
+  /* =========================
+     RECENT TASKS
+     ========================= */
+
+  const recentTasks = tasks
+    .slice(-5)
+    .reverse();
+
+  /* =========================
+     PRIORITY COUNTS
+     ========================= */
+
+  const highPriority = tasks.filter(
+    (task) => task.priority === "High"
+  ).length;
+
+  const mediumPriority = tasks.filter(
+    (task) => task.priority === "Medium"
+  ).length;
+
+  const lowPriority = tasks.filter(
+    (task) => task.priority === "Low"
+  ).length;
+
+  const criticalPriority = tasks.filter(
+    (task) => task.priority === "Critical"
+  ).length;
 
   return (
     <DashboardLayout>
-      <div className="dashboard-header">
+
+      {/* =========================
+          WELCOME
+          ========================= */}
+
+      <div className="dashboard-top">
+
         <div>
-          <h1>Welcome back 👋</h1>
-          <p>{currentDashboard.subtitle}</p>
+          <p className="dashboard-label">
+            {role} Dashboard
+          </p>
+
+          <h1>
+            Welcome back, {user?.name || "User"} 👋
+          </h1>
+
+          <p className="dashboard-description">
+            Here's what's happening with your
+            tasks today.
+          </p>
         </div>
 
-        {/* Temporary role switcher for testing */}
-        <div className="role-switcher">
-          <label>Test Role:</label>
-
-          <select
-            value={role || ""}
-            onChange={(e) =>
-              loginAs(e.target.value)
-            }
+        {(role === "Admin" ||
+          role === "Manager") && (
+          <Link
+            to="/tasks/create"
+            className="dashboard-create-btn"
           >
-            <option value="Manager">
-              Manager
-            </option>
+            + Create Task
+          </Link>
+        )}
 
-            <option value="Admin">
-              Admin
-            </option>
-
-            <option value="Team Member">
-              Team Member
-            </option>
-          </select>
-        </div>
       </div>
 
-      <div className="current-role">
-        Logged in as: <strong>{role}</strong>
-      </div>
+      {/* =========================
+          STAT CARDS
+          ========================= */}
 
-      {/* Statistics */}
-      <div className="stats-grid">
-        {currentDashboard.stats.map((stat) => (
-          <StatCard
+      <div className="dashboard-stats">
+
+        {stats.map((stat) => (
+          <div
+            className="dashboard-stat-card"
             key={stat.title}
-            title={stat.title}
-            value={stat.value}
-          />
+          >
+
+            <div
+              className={`dashboard-stat-icon ${stat.type}`}
+            >
+              {stat.icon}
+            </div>
+
+            <div className="dashboard-stat-content">
+
+              <p>{stat.title}</p>
+
+              <h2>{stat.value}</h2>
+
+            </div>
+
+          </div>
         ))}
+
       </div>
 
-      {/* Recent Tasks */}
-      <div className="recent-section">
-        <h2>Recent Tasks</h2>
+      {/* =========================
+          MAIN GRID
+          ========================= */}
 
-        <div className="task-table">
+      <div className="dashboard-grid">
 
-          <div className="task-row task-heading">
-            <span>Task</span>
-            <span>Priority</span>
-            <span>Status</span>
-            <span>Progress</span>
+        {/* Completion */}
+        <div className="dashboard-panel completion-panel">
+
+          <div className="panel-header">
+
+            <div>
+              <h2>Task Completion</h2>
+
+              <p>
+                Overall project progress
+              </p>
+            </div>
+
+            <span className="panel-icon">
+              📊
+            </span>
+
           </div>
+
+          <div className="completion-content">
+
+            <div className="completion-circle">
+
+              <div>
+                <strong>
+                  {completionPercentage}%
+                </strong>
+
+                <span>
+                  Complete
+                </span>
+              </div>
+
+            </div>
+
+            <div className="completion-details">
+
+              <div className="completion-row">
+                <span>
+                  <i className="dot completed-dot"></i>
+                  Completed
+                </span>
+
+                <strong>
+                  {completedTasks}
+                </strong>
+              </div>
+
+              <div className="completion-row">
+                <span>
+                  <i className="dot progress-dot"></i>
+                  In Progress
+                </span>
+
+                <strong>
+                  {inProgressTasks}
+                </strong>
+              </div>
+
+              <div className="completion-row">
+                <span>
+                  <i className="dot pending-dot"></i>
+                  Pending
+                </span>
+
+                <strong>
+                  {pendingTasks}
+                </strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Priority */}
+        <div className="dashboard-panel priority-panel">
+
+          <div className="panel-header">
+
+            <div>
+              <h2>Task Priority</h2>
+
+              <p>
+                Tasks by priority level
+              </p>
+            </div>
+
+            <span className="panel-icon">
+              🎯
+            </span>
+
+          </div>
+
+          <div className="priority-list">
+
+            <div className="priority-item">
+
+              <div className="priority-info">
+                <span>Critical</span>
+                <strong>
+                  {criticalPriority}
+                </strong>
+              </div>
+
+              <div className="priority-bar">
+                <div
+                  className="priority-fill critical"
+                  style={{
+                    width: `${
+                      totalTasks
+                        ? (criticalPriority /
+                            totalTasks) *
+                          100
+                        : 0
+                    }%`,
+                  }}
+                ></div>
+              </div>
+
+            </div>
+
+            <div className="priority-item">
+
+              <div className="priority-info">
+                <span>High</span>
+                <strong>
+                  {highPriority}
+                </strong>
+              </div>
+
+              <div className="priority-bar">
+                <div
+                  className="priority-fill high"
+                  style={{
+                    width: `${
+                      totalTasks
+                        ? (highPriority /
+                            totalTasks) *
+                          100
+                        : 0
+                    }%`,
+                  }}
+                ></div>
+              </div>
+
+            </div>
+
+            <div className="priority-item">
+
+              <div className="priority-info">
+                <span>Medium</span>
+                <strong>
+                  {mediumPriority}
+                </strong>
+              </div>
+
+              <div className="priority-bar">
+                <div
+                  className="priority-fill medium"
+                  style={{
+                    width: `${
+                      totalTasks
+                        ? (mediumPriority /
+                            totalTasks) *
+                          100
+                        : 0
+                    }%`,
+                  }}
+                ></div>
+              </div>
+
+            </div>
+
+            <div className="priority-item">
+
+              <div className="priority-info">
+                <span>Low</span>
+                <strong>
+                  {lowPriority}
+                </strong>
+              </div>
+
+              <div className="priority-bar">
+                <div
+                  className="priority-fill low"
+                  style={{
+                    width: `${
+                      totalTasks
+                        ? (lowPriority /
+                            totalTasks) *
+                          100
+                        : 0
+                    }%`,
+                  }}
+                ></div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* =========================
+          RECENT TASKS
+          ========================= */}
+
+      <div className="dashboard-panel recent-panel">
+
+        <div className="panel-header">
+
+          <div>
+            <h2>Recent Tasks</h2>
+
+            <p>
+              Latest activity across your workspace
+            </p>
+          </div>
+
+          <Link
+            to={
+              role === "Team Member"
+                ? "/my-tasks"
+                : "/tasks"
+            }
+            className="view-all-link"
+          >
+            View all →
+          </Link>
+
+        </div>
+
+        <div className="dashboard-task-list">
 
           {recentTasks.length > 0 ? (
             recentTasks.map((task) => (
-              <div
-                className="task-row"
+              <Link
+                to={`/tasks/${task.id}`}
+                className="dashboard-task-row"
                 key={task.id}
               >
-                <span>{task.title}</span>
 
-                <span
-                  className={
-                    task.priority?.toLowerCase()
-                  }
-                >
-                  {task.priority}
-                </span>
+                <div className="task-main">
 
-                <span>{task.status}</span>
+                  <div className="task-mini-icon">
+                    📋
+                  </div>
 
-                <span>
-                  {task.progress || 0}%
-                </span>
-              </div>
+                  <div>
+                    <h3>
+                      {task.title}
+                    </h3>
+
+                    <p>
+                      Assigned to{" "}
+                      {task.assignedTo}
+                    </p>
+                  </div>
+
+                </div>
+
+                <div className="task-status-area">
+
+                  <span
+                    className={`dashboard-priority ${task.priority?.toLowerCase()}`}
+                  >
+                    {task.priority}
+                  </span>
+
+                  <span
+                    className={`dashboard-status ${task.status
+                      ?.toLowerCase()
+                      .replace(" ", "-")}`}
+                  >
+                    {task.status}
+                  </span>
+
+                  <div className="mini-progress">
+
+                    <div className="mini-progress-bar">
+                      <div
+                        className="mini-progress-fill"
+                        style={{
+                          width: `${
+                            task.progress || 0
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
+
+                    <span>
+                      {task.progress || 0}%
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </Link>
             ))
           ) : (
-            <div className="task-row">
-              <span>No tasks available</span>
+            <div className="dashboard-empty">
+              <span>📋</span>
+              <p>No tasks available.</p>
             </div>
           )}
 
         </div>
+
       </div>
+
+      {/* =========================
+          QUICK ACTIONS
+          ========================= */}
+
+      <div className="quick-actions">
+
+        <div className="quick-action-heading">
+          <h2>Quick Actions</h2>
+          <p>
+            Get things done faster.
+          </p>
+        </div>
+
+        <div className="quick-action-grid">
+
+          {(role === "Admin" ||
+            role === "Manager") && (
+            <Link
+              to="/tasks/create"
+              className="quick-action"
+            >
+              <span className="quick-action-icon">
+                +
+              </span>
+
+              <div>
+                <strong>Create Task</strong>
+                <small>
+                  Assign a new task
+                </small>
+              </div>
+
+              <span>→</span>
+            </Link>
+          )}
+
+          <Link
+            to={
+              role === "Team Member"
+                ? "/my-tasks"
+                : "/tasks"
+            }
+            className="quick-action"
+          >
+            <span className="quick-action-icon">
+              📋
+            </span>
+
+            <div>
+              <strong>
+                {role === "Team Member"
+                  ? "My Tasks"
+                  : "All Tasks"}
+              </strong>
+
+              <small>
+                View your task list
+              </small>
+            </div>
+
+            <span>→</span>
+          </Link>
+
+          <Link
+            to="/notifications"
+            className="quick-action"
+          >
+            <span className="quick-action-icon">
+              🔔
+            </span>
+
+            <div>
+              <strong>
+                Notifications
+              </strong>
+
+              <small>
+                Check recent updates
+              </small>
+            </div>
+
+            <span>→</span>
+          </Link>
+
+          <Link
+            to="/profile"
+            className="quick-action"
+          >
+            <span className="quick-action-icon">
+              👤
+            </span>
+
+            <div>
+              <strong>
+                My Profile
+              </strong>
+
+              <small>
+                Manage your account
+              </small>
+            </div>
+
+            <span>→</span>
+          </Link>
+
+        </div>
+
+      </div>
+
     </DashboardLayout>
   );
 }

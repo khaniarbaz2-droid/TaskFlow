@@ -17,67 +17,60 @@ function CreateTask() {
   const [tags, setTags] = useState("");
   const [attachment, setAttachment] = useState(null);
 
-  const canCreateTask =
-    user?.role === "Admin" ||
-    user?.role === "Manager";
-
-  if (!canCreateTask) {
-    return (
-      <DashboardLayout>
-        <div className="access-denied">
-          <div className="access-denied-icon">🔒</div>
-
-          <h1>Access Denied</h1>
-
-          <p>
-            You don't have permission to create tasks.
-          </p>
-
-          <button
-            onClick={() => navigate("/my-tasks")}
-          >
-            Go to My Tasks
-          </button>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const isAllowed =
+    user?.role === "Manager" ||
+    user?.role === "Admin";
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (startDate && dueDate && dueDate < startDate) {
+    if (!title.trim()) {
+      alert("Please enter a task title.");
+      return;
+    }
+
+    if (!assignee) {
+      alert("Please select an assignee.");
+      return;
+    }
+
+    if (
+      startDate &&
+      dueDate &&
+      new Date(dueDate) < new Date(startDate)
+    ) {
       alert("Due date cannot be before the start date.");
       return;
     }
 
-    // Get existing tasks
-    const existingTasks = JSON.parse(
+    const savedTasks = JSON.parse(
       localStorage.getItem("taskflow_tasks") || "[]"
     );
 
-    // Create new task
     const newTask = {
       id: Date.now(),
-      title,
-      description,
+      title: title.trim(),
+      description: description.trim(),
+      assignedBy: user.name,
+      assignedTo: assignee,
       priority,
       status: "Pending",
       progress: 0,
-      assignedTo: assignee,
-      assignedBy: user.name,
       startDate,
       dueDate,
-      tags,
+      tags: tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
       attachment: attachment
         ? attachment.name
-        : null,
-      createdAt: new Date().toLocaleString(),
+        : "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
-    // Save task
     const updatedTasks = [
-      ...existingTasks,
+      ...savedTasks,
       newTask,
     ];
 
@@ -86,12 +79,11 @@ function CreateTask() {
       JSON.stringify(updatedTasks)
     );
 
-    // Get existing notifications
-    const existingNotifications = JSON.parse(
-      localStorage.getItem("taskflow_notifications") || "[]"
+    // Notify all task-related pages
+    window.dispatchEvent(
+      new Event("taskflowTasksUpdated")
     );
 
-    // Create notification for assigned user
     const newNotification = {
       id: Date.now() + 1,
       type: "assignment",
@@ -103,186 +95,293 @@ function CreateTask() {
       assignedTo: assignee,
     };
 
-    // Save notification
-    const updatedNotifications = [
-      ...existingNotifications,
-      newNotification,
-    ];
+    const savedNotifications = JSON.parse(
+      localStorage.getItem(
+        "taskflow_notifications"
+      ) || "[]"
+    );
 
     localStorage.setItem(
       "taskflow_notifications",
-      JSON.stringify(updatedNotifications)
+      JSON.stringify([
+        ...savedNotifications,
+        newNotification,
+      ])
     );
 
-    alert("Task created and assigned successfully!");
+    // Notify notification page
+    window.dispatchEvent(
+      new Event("taskflowNotificationsUpdated")
+    );
+
+    alert("Task created successfully!");
 
     navigate("/tasks");
   };
+
+  if (!isAllowed) {
+    return (
+      <DashboardLayout>
+        <div
+          style={{
+            padding: "40px",
+            textAlign: "center",
+          }}
+        >
+          <h2>Access Denied</h2>
+
+          <p>
+            Only Managers and Admins can create
+            tasks.
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div className="create-task-page">
 
-        <div className="page-header">
+        <div className="create-task-header">
           <div>
-            <h1>Create Task</h1>
+            <h1>Create New Task</h1>
 
             <p>
-              Create and assign a new task.
+              Create and assign a new task to
+              your team.
             </p>
           </div>
         </div>
 
-        <div className="task-form-card">
+        <div className="create-task-card">
 
           <form onSubmit={handleSubmit}>
 
-            <div className="form-group">
-              <label>Task Title *</label>
+            <div className="form-section">
 
-              <input
-                type="text"
-                placeholder="Enter task title"
-                value={title}
-                onChange={(e) =>
-                  setTitle(e.target.value)
-                }
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Description</label>
-
-              <textarea
-                placeholder="Describe the task..."
-                rows="5"
-                value={description}
-                onChange={(e) =>
-                  setDescription(e.target.value)
-                }
-              ></textarea>
-            </div>
-
-            <div className="form-row">
+              <h2>Task Information</h2>
 
               <div className="form-group">
-                <label>Assign To *</label>
+                <label>
+                  Task Title
+                  <span>*</span>
+                </label>
 
-                <select
-                  value={assignee}
+                <input
+                  type="text"
+                  placeholder="Enter task title"
+                  value={title}
                   onChange={(e) =>
-                    setAssignee(e.target.value)
+                    setTitle(e.target.value)
                   }
                   required
-                >
-                  <option value="">
-                    Select team member
-                  </option>
-
-                  <option value="Arbaz">
-                    Arbaz
-                  </option>
-
-                  <option value="Rahul">
-                    Rahul
-                  </option>
-
-                  <option value="Aman">
-                    Aman
-                  </option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Priority</label>
-
-                <select
-                  value={priority}
-                  onChange={(e) =>
-                    setPriority(e.target.value)
-                  }
-                >
-                  <option>Low</option>
-                  <option>Medium</option>
-                  <option>High</option>
-                  <option>Critical</option>
-                </select>
-              </div>
-
-            </div>
-
-            <div className="form-row">
-
-              <div className="form-group">
-                <label>Start Date</label>
-
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) =>
-                    setStartDate(e.target.value)
-                  }
                 />
               </div>
 
               <div className="form-group">
-                <label>Due Date</label>
+                <label>
+                  Description
+                </label>
 
-                <input
-                  type="date"
-                  value={dueDate}
+                <textarea
+                  placeholder="Describe the task..."
+                  value={description}
                   onChange={(e) =>
-                    setDueDate(e.target.value)
+                    setDescription(
+                      e.target.value
+                    )
                   }
+                  rows="5"
                 />
               </div>
 
             </div>
 
-            <div className="form-group">
-              <label>Tags</label>
+            <div className="form-section">
 
-              <input
-                type="text"
-                placeholder="e.g. frontend, urgent, project"
-                value={tags}
-                onChange={(e) =>
-                  setTags(e.target.value)
-                }
-              />
+              <h2>Assignment</h2>
+
+              <div className="form-row">
+
+                <div className="form-group">
+
+                  <label>
+                    Assign To
+                    <span>*</span>
+                  </label>
+
+                  <select
+                    value={assignee}
+                    onChange={(e) =>
+                      setAssignee(
+                        e.target.value
+                      )
+                    }
+                    required
+                  >
+                    <option value="">
+                      Select team member
+                    </option>
+
+                    <option value="Arbaz">
+                      Arbaz
+                    </option>
+
+                    <option value="Rahul">
+                      Rahul
+                    </option>
+
+                    <option value="Aman">
+                      Aman
+                    </option>
+                  </select>
+
+                </div>
+
+                <div className="form-group">
+
+                  <label>
+                    Priority
+                  </label>
+
+                  <select
+                    value={priority}
+                    onChange={(e) =>
+                      setPriority(
+                        e.target.value
+                      )
+                    }
+                  >
+                    <option value="Low">
+                      Low
+                    </option>
+
+                    <option value="Medium">
+                      Medium
+                    </option>
+
+                    <option value="High">
+                      High
+                    </option>
+
+                    <option value="Critical">
+                      Critical
+                    </option>
+                  </select>
+
+                </div>
+
+              </div>
+
             </div>
 
-            <div className="form-group">
-              <label>Attachments</label>
+            <div className="form-section">
 
-              <input
-                type="file"
-                onChange={(e) =>
-                  setAttachment(e.target.files[0])
-                }
-              />
+              <h2>Schedule</h2>
 
-              {attachment && (
-                <small className="selected-file">
-                  Selected: {attachment.name}
+              <div className="form-row">
+
+                <div className="form-group">
+
+                  <label>
+                    Start Date
+                  </label>
+
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) =>
+                      setStartDate(
+                        e.target.value
+                      )
+                    }
+                  />
+
+                </div>
+
+                <div className="form-group">
+
+                  <label>
+                    Due Date
+                  </label>
+
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) =>
+                      setDueDate(
+                        e.target.value
+                      )
+                    }
+                  />
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="form-section">
+
+              <h2>Additional Details</h2>
+
+              <div className="form-group">
+
+                <label>
+                  Tags
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="e.g. frontend, urgent, website"
+                  value={tags}
+                  onChange={(e) =>
+                    setTags(e.target.value)
+                  }
+                />
+
+                <small>
+                  Separate multiple tags with
+                  commas.
                 </small>
-              )}
+
+              </div>
+
+              <div className="form-group">
+
+                <label>
+                  Attachment
+                </label>
+
+                <input
+                  type="file"
+                  onChange={(e) =>
+                    setAttachment(
+                      e.target.files[0]
+                    )
+                  }
+                />
+
+              </div>
+
             </div>
 
-            <div className="form-actions">
+            <div className="create-task-actions">
 
               <button
                 type="button"
                 className="cancel-btn"
-                onClick={() => navigate("/tasks")}
+                onClick={() =>
+                  navigate("/tasks")
+                }
               >
                 Cancel
               </button>
 
               <button
                 type="submit"
-                className="submit-btn"
+                className="create-task-btn"
               >
                 Create Task
               </button>

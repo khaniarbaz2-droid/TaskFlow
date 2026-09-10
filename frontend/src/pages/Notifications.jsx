@@ -9,6 +9,11 @@ function Notifications() {
   const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState([]);
+  const [activeFilter, setActiveFilter] = useState("All");
+
+  /* =========================
+     LOAD NOTIFICATIONS
+     ========================= */
 
   useEffect(() => {
     const savedNotifications = JSON.parse(
@@ -20,7 +25,8 @@ function Notifications() {
         id: "default-1",
         type: "assignment",
         title: "New Task Assigned",
-        message: "You have been assigned the task Design Login Page.",
+        message:
+          "You have been assigned the task Design Login Page.",
         time: "10 minutes ago",
         read: false,
         taskId: 1,
@@ -30,7 +36,8 @@ function Notifications() {
         id: "default-2",
         type: "comment",
         title: "New Comment",
-        message: "Rahul commented on API Integration.",
+        message:
+          "Rahul commented on API Integration.",
         time: "1 hour ago",
         read: false,
         taskId: 3,
@@ -40,7 +47,8 @@ function Notifications() {
         id: "default-3",
         type: "deadline",
         title: "Deadline Approaching",
-        message: "Database Setup is due tomorrow.",
+        message:
+          "Database Setup is due tomorrow.",
         time: "3 hours ago",
         read: true,
         taskId: 2,
@@ -54,78 +62,180 @@ function Notifications() {
     ]);
   }, []);
 
+  /* =========================
+     USER NOTIFICATIONS
+     ========================= */
+
   const myNotifications = notifications.filter(
     (notification) =>
       notification.assignedTo === user?.name
   );
 
+  /* =========================
+     FILTER
+     ========================= */
+
+  const filteredNotifications =
+    activeFilter === "All"
+      ? myNotifications
+      : activeFilter === "Unread"
+      ? myNotifications.filter(
+          (notification) => !notification.read
+        )
+      : myNotifications.filter(
+          (notification) =>
+            notification.type === activeFilter
+        );
+
+  /* =========================
+     COUNTS
+     ========================= */
+
   const unreadCount = myNotifications.filter(
     (notification) => !notification.read
   ).length;
 
-  const markAsRead = (id) => {
-    const updatedNotifications = notifications.map(
-      (notification) =>
-        notification.id === id
-          ? { ...notification, read: true }
-          : notification
-    );
+  const assignmentCount = myNotifications.filter(
+    (notification) =>
+      notification.type === "assignment"
+  ).length;
 
-    setNotifications(updatedNotifications);
+  const commentCount = myNotifications.filter(
+    (notification) =>
+      notification.type === "comment"
+  ).length;
+
+  const updateCount = myNotifications.filter(
+    (notification) =>
+      notification.type === "update"
+  ).length;
+
+  /* =========================
+     SAVE CUSTOM NOTIFICATIONS
+     ========================= */
+
+  const saveCustomNotifications = (
+    updatedNotifications
+  ) => {
+    const customNotifications =
+      updatedNotifications.filter(
+        (notification) =>
+          !String(notification.id).startsWith(
+            "default-"
+          )
+      );
 
     localStorage.setItem(
       "taskflow_notifications",
-      JSON.stringify(
-        updatedNotifications.filter(
-          (notification) =>
-            !String(notification.id).startsWith("default-")
-        )
-      )
+      JSON.stringify(customNotifications)
     );
   };
+
+  /* =========================
+     MARK AS READ
+     ========================= */
+
+  const markAsRead = (id) => {
+    const updatedNotifications =
+      notifications.map((notification) =>
+        notification.id === id
+          ? {
+              ...notification,
+              read: true,
+            }
+          : notification
+      );
+
+    setNotifications(updatedNotifications);
+
+    saveCustomNotifications(
+      updatedNotifications
+    );
+  };
+
+  /* =========================
+     MARK ALL AS READ
+     ========================= */
 
   const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(
-      (notification) => ({
-        ...notification,
-        read:
-          notification.assignedTo === user?.name
-            ? true
-            : notification.read,
-      })
-    );
+    const updatedNotifications =
+      notifications.map((notification) =>
+        notification.assignedTo === user?.name
+          ? {
+              ...notification,
+              read: true,
+            }
+          : notification
+      );
 
     setNotifications(updatedNotifications);
 
-    localStorage.setItem(
-      "taskflow_notifications",
-      JSON.stringify(
-        updatedNotifications.filter(
-          (notification) =>
-            !String(notification.id).startsWith("default-")
-        )
-      )
+    saveCustomNotifications(
+      updatedNotifications
     );
   };
 
-  const handleNotificationClick = (notification) => {
+  /* =========================
+     CLICK NOTIFICATION
+     ========================= */
+
+  const handleNotificationClick = (
+    notification
+  ) => {
     markAsRead(notification.id);
 
     if (notification.taskId) {
-      navigate(`/tasks/${notification.taskId}`);
+      navigate(
+        `/tasks/${notification.taskId}`
+      );
     }
+  };
+
+  /* =========================
+     ICON
+     ========================= */
+
+  const getNotificationIcon = (type) => {
+    if (type === "assignment") {
+      return "📋";
+    }
+
+    if (type === "comment") {
+      return "💬";
+    }
+
+    if (type === "deadline") {
+      return "⏰";
+    }
+
+    if (type === "update") {
+      return "🔄";
+    }
+
+    return "🔔";
   };
 
   return (
     <DashboardLayout>
+
       <div className="notifications-page">
 
+        {/* =========================
+            HEADER
+            ========================= */}
+
         <div className="notifications-header">
+
           <div>
+            <p className="notifications-label">
+              Updates
+            </p>
+
             <h1>Notifications</h1>
 
-            <p>
-              Stay updated with your tasks and activities.
+            <p className="notifications-subtitle">
+              Stay updated with your tasks and
+              team activity.
             </p>
           </div>
 
@@ -134,78 +244,281 @@ function Notifications() {
               className="mark-all-btn"
               onClick={markAllAsRead}
             >
-              Mark all as read
+              ✓ Mark all as read
             </button>
           )}
+
         </div>
 
-        <div className="notification-summary">
-          <span>
-            {unreadCount} unread notification
-            {unreadCount !== 1 ? "s" : ""}
-          </span>
+        {/* =========================
+            SUMMARY CARDS
+            ========================= */}
+
+        <div className="notification-stats">
+
+          <div className="notification-stat">
+
+            <div className="notification-stat-icon blue">
+              🔔
+            </div>
+
+            <div>
+              <span>Total</span>
+              <strong>
+                {myNotifications.length}
+              </strong>
+            </div>
+
+          </div>
+
+          <div className="notification-stat">
+
+            <div className="notification-stat-icon red">
+              ●
+            </div>
+
+            <div>
+              <span>Unread</span>
+              <strong>
+                {unreadCount}
+              </strong>
+            </div>
+
+          </div>
+
+          <div className="notification-stat">
+
+            <div className="notification-stat-icon purple">
+              📋
+            </div>
+
+            <div>
+              <span>Assignments</span>
+              <strong>
+                {assignmentCount}
+              </strong>
+            </div>
+
+          </div>
+
+          <div className="notification-stat">
+
+            <div className="notification-stat-icon green">
+              💬
+            </div>
+
+            <div>
+              <span>Comments</span>
+              <strong>
+                {commentCount}
+              </strong>
+            </div>
+
+          </div>
+
         </div>
 
-        <div className="notifications-list">
+        {/* =========================
+            FILTERS
+            ========================= */}
 
-          {myNotifications.length > 0 ? (
-            myNotifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={
-                  notification.read
-                    ? "notification-card"
-                    : "notification-card unread"
-                }
-                onClick={() =>
-                  handleNotificationClick(notification)
-                }
-              >
+        <div className="notification-filters">
 
-                <div className="notification-icon-box">
-                  {notification.type === "assignment" && "📋"}
-                  {notification.type === "comment" && "💬"}
-                  {notification.type === "deadline" && "⏰"}
-                  {notification.type === "update" && "🔄"}
-                </div>
+          <button
+            className={
+              activeFilter === "All"
+                ? "notification-filter active"
+                : "notification-filter"
+            }
+            onClick={() =>
+              setActiveFilter("All")
+            }
+          >
+            All
+          </button>
 
-                <div className="notification-content">
+          <button
+            className={
+              activeFilter === "Unread"
+                ? "notification-filter active"
+                : "notification-filter"
+            }
+            onClick={() =>
+              setActiveFilter("Unread")
+            }
+          >
+            Unread
+            {unreadCount > 0 && (
+              <span>
+                {unreadCount}
+              </span>
+            )}
+          </button>
 
-                  <div className="notification-title-row">
-                    <h3>{notification.title}</h3>
+          <button
+            className={
+              activeFilter === "assignment"
+                ? "notification-filter active"
+                : "notification-filter"
+            }
+            onClick={() =>
+              setActiveFilter("assignment")
+            }
+          >
+            Assignments
+          </button>
 
-                    {!notification.read && (
-                      <span className="unread-dot"></span>
-                    )}
-                  </div>
+          <button
+            className={
+              activeFilter === "comment"
+                ? "notification-filter active"
+                : "notification-filter"
+            }
+            onClick={() =>
+              setActiveFilter("comment")
+            }
+          >
+            Comments
+          </button>
 
-                  <p>{notification.message}</p>
+          <button
+            className={
+              activeFilter === "update"
+                ? "notification-filter active"
+                : "notification-filter"
+            }
+            onClick={() =>
+              setActiveFilter("update")
+            }
+          >
+            Updates
+          </button>
 
-                  <span className="notification-time">
-                    {notification.time}
-                  </span>
+        </div>
 
-                </div>
+        {/* =========================
+            NOTIFICATION LIST
+            ========================= */}
 
-              </div>
-            ))
-          ) : (
-            <div className="empty-notifications">
-              <div className="empty-icon">
-                🔔
-              </div>
+        <div className="notifications-card">
 
-              <h2>No notifications</h2>
+          <div className="notifications-card-header">
+
+            <div>
+              <h2>
+                Recent Notifications
+              </h2>
 
               <p>
-                You're all caught up!
+                {unreadCount > 0
+                  ? `${unreadCount} unread notification${
+                      unreadCount !== 1
+                        ? "s"
+                        : ""
+                    }`
+                  : "You're all caught up"}
               </p>
             </div>
-          )}
+
+            <span>
+              {updateCount > 0 &&
+                `${updateCount} updates`}
+            </span>
+
+          </div>
+
+          <div className="notifications-list">
+
+            {filteredNotifications.length > 0 ? (
+              filteredNotifications.map(
+                (notification) => (
+                  <div
+                    key={notification.id}
+                    className={
+                      notification.read
+                        ? "notification-item"
+                        : "notification-item unread"
+                    }
+                    onClick={() =>
+                      handleNotificationClick(
+                        notification
+                      )
+                    }
+                  >
+
+                    {/* Icon */}
+                    <div
+                      className={`notification-icon ${notification.type}`}
+                    >
+                      {getNotificationIcon(
+                        notification.type
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="notification-content">
+
+                      <div className="notification-title-row">
+
+                        <h3>
+                          {notification.title}
+                        </h3>
+
+                        {!notification.read && (
+                          <span className="unread-dot"></span>
+                        )}
+
+                      </div>
+
+                      <p>
+                        {notification.message}
+                      </p>
+
+                      <div className="notification-meta">
+
+                        <span>
+                          🕒 {notification.time}
+                        </span>
+
+                        {notification.taskId && (
+                          <span>
+                            View task →
+                          </span>
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  </div>
+                )
+              )
+            ) : (
+              <div className="empty-notifications">
+
+                <div className="empty-notification-icon">
+                  🔔
+                </div>
+
+                <h2>
+                  No notifications
+                </h2>
+
+                <p>
+                  {activeFilter === "Unread"
+                    ? "You have no unread notifications."
+                    : "You're all caught up!"}
+                </p>
+
+              </div>
+            )}
+
+          </div>
 
         </div>
 
       </div>
+
     </DashboardLayout>
   );
 }
